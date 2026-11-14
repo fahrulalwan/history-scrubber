@@ -41,12 +41,12 @@ async function render() {
 async function renderSweeps() {
   const sweeps = await loadSweeps();
   $('sweeps').replaceChildren(...(sweeps.length ? sweeps.map((w) => {
-    const bad = Object.values(w.result || {}).some((r) => r.left);
-    const left = describeLeft(w.result);
+    const bad = !!w.totals?.left;
+    const left = describeLeft(w.totals);
     return el('div', { class: 'lrow' },
       el('span', {}, SWEEP_KINDS[w.kind] || 'Sweep'),
       el('span', { class: 'when' }, describeWhen(w.at)),
-      el('span', { class: 'detail' }, describeResult(w.result).replace(/^./, (c) => c.toUpperCase()) + '. ',
+      el('span', { class: 'detail' }, describeResult(w.totals).replace(/^./, (c) => c.toUpperCase()) + '. ',
         ...(left ? [el('span', { class: bad ? 'proof bad' : 'proof' }, left + '.')] : [])));
   }) : [el('div', { class: 'empty' }, 'No sweep yet. One runs every time Chrome starts.')]));
 }

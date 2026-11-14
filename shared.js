@@ -29,25 +29,21 @@ function siteForHost(host, sites) {
   return sites.find((s) => host === s || host.endsWith('.' + s)) || null;
 }
 
-function describeResult(result) {
-  const parts = Object.entries(result || {})
-    .filter(([, n]) => n.history || n.downloads)
-    .map(([site, n]) => {
-      const bits = [];
-      if (n.history) bits.push(`${n.history} ${n.history === 1 ? 'page' : 'pages'}`);
-      if (n.downloads) bits.push(`${n.downloads} ${n.downloads === 1 ? 'download' : 'downloads'}`);
-      return `${site} (${bits.join(', ')})`;
-    });
-  return parts.length ? `deleted ${parts.join(', ')}` : 'nothing left to delete';
+// Counts only, never a site name: this text shows in the popup, where anyone can glance at it.
+function describeResult(totals) {
+  const t = totals || {};
+  const bits = [];
+  if (t.history) bits.push(plural(t.history, 'page'));
+  if (t.downloads) bits.push(plural(t.downloads, 'download'));
+  return bits.length ? `deleted ${bits.join(' and ')}` : 'nothing left to delete';
 }
 
 // The check run right after deleting: how many of those pages are still in history.
 // Empty when the run deleted nothing, since "0 left" then adds nothing.
-function describeLeft(result) {
-  const rows = Object.values(result || {});
-  const left = rows.reduce((n, r) => n + (r.left || 0), 0);
-  if (left) return `${plural(left, 'page')} could not be deleted`;
-  return rows.some((r) => r.history) ? 'Checked again: 0 pages left' : '';
+function describeLeft(totals) {
+  const t = totals || {};
+  if (t.left) return `${plural(t.left, 'page')} could not be deleted`;
+  return t.history ? 'Checked again: 0 left' : '';
 }
 
 const SWEEP_KINDS = { start: 'Chrome start', tab: 'Tab closed', added: 'Site added', manual: 'Delete history now', panic: 'Panic shortcut' };
@@ -66,8 +62,8 @@ function describeWhen(iso) {
 async function lastSweepSentence() {
   const [last] = await loadSweeps();
   if (!last) return 'No sweep yet. One runs every time Chrome starts.';
-  const left = describeLeft(last.result);
-  return `Last sweep ${describeWhen(last.at)}: ${describeResult(last.result)}.${left ? ` ${left}.` : ''}`;
+  const left = describeLeft(last.totals);
+  return `Last sweep ${describeWhen(last.at)}: ${describeResult(last.totals)}.${left ? ` ${left}.` : ''}`;
 }
 
 function el(tag, attrs = {}, ...children) {

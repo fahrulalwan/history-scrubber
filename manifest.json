@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "History scrubber",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Deletes browser history for listed sites when their tab closes. Cookies are left alone.",
   "permissions": ["history", "tabs", "storage", "downloads", "webNavigation", "favicon", "bookmarks"],
   "commands": {

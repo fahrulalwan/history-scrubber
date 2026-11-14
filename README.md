@@ -28,7 +28,7 @@ Each site can also be set to open in an incognito window instead, so no history 
 
 ## Proof, and the places it can't reach
 
-- **Every run is checked.** Right after deleting, each page is looked up again. Settings keeps the last 10 runs with what they deleted and "Checked again: 0 pages left", or how many pages could not be deleted.
+- **Every run is checked.** Right after deleting, each page is looked up again. Settings keeps the last 10 runs with how many pages they deleted and "Checked again: 0 left", or how many could not be deleted. The log holds counts only, never site names, so a glance at the popup doesn't show which site you visited.
 - **Address bar.** A bookmark of a listed site keeps it in address-bar suggestions. Settings lists any such bookmark and changes nothing.
 - **Google account.** With Web & App Activity on, Google keeps its own record of your visits, which no extension can reach. Settings has a button per site that copies its name and opens Google My Activity, where you paste it into the search box.
 - **Panic shortcut.** One key combination closes every tab on a listed site and deletes their history at once. No key is set by default; pick one at `chrome://extensions/shortcuts`.

@@ -83,13 +83,18 @@ chrome.history.onVisited.addListener(async (item) => {
 
 // `scan` adds a pass over all history (about 0.6 s on 9,000 pages), needed for visits
 // made before a site was listed or synced from another device. A tab close skips it.
-// Every run is logged (the last 10) so the user can see that deletion happened.
+// Every run is logged (the last 10) so the user can see that deletion happened. The log
+// holds totals only: a site name with a page count would show anyone who opens the popup
+// which site was visited, the thing the extension exists to hide.
 function scrub(sites, scan, kind) {
   return serial(async () => {
-    const result = await scrubNow(sites, scan);
+    const totals = { history: 0, downloads: 0, left: 0 };
+    for (const r of Object.values(await scrubNow(sites, scan))) {
+      for (const k of Object.keys(totals)) totals[k] += r[k];
+    }
     const { sweeps = [] } = await chrome.storage.local.get('sweeps');
-    await chrome.storage.local.set({ sweeps: [{ at: new Date().toISOString(), kind, result }, ...sweeps].slice(0, 10) });
-    return result;
+    await chrome.storage.local.set({ sweeps: [{ at: new Date().toISOString(), kind, totals }, ...sweeps].slice(0, 10) });
+    return totals;
   });
 }
 
@@ -203,7 +208,10 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
     if (!sites) await chrome.storage.local.set({ sites: old.sites, incognitoSites: old.incognitoSites || [] });
     await chrome.storage.sync.clear();
   }
-  await chrome.storage.local.remove('lastSweep'); // replaced by `sweeps`
+  // `lastSweep` (before 1.7.0) and 1.7.0 `sweeps` entries named each site; drop them.
+  const { sweeps = [] } = await chrome.storage.local.get('sweeps');
+  if (sweeps.some((w) => !w.totals)) await chrome.storage.local.remove('sweeps');
+  await chrome.storage.local.remove('lastSweep');
 });
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
