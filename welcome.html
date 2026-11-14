@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome to History scrubber</title>
+<link rel="stylesheet" href="theme.css">
+<style>
+  body { background: var(--surface); }
+  main { max-width: 640px; margin: 0 auto; padding: 48px 16px 72px; }
+  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .head .logo { width: 40px; height: 40px; border-radius: 10px; }
+  h1 { font-size: 34px; }
+  .lede { color: var(--ink-2); font-size: 16px; margin: 0 0 32px; }
+  .step { display: grid; grid-template-columns: 32px 1fr; gap: 16px; margin-bottom: 28px; }
+  .num { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--brand); color: var(--on-brand); font-weight: 700; font-size: 14px; }
+  .step.done .num { background: var(--accent); }
+  h2 { font-size: 21px; margin: 2px 0 6px; }
+  .step p { margin: 0 0 12px; color: var(--ink-2); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+  .mini { padding: 12px 16px; font-size: 13px; background: var(--bg); }
+  .mini h3 { font-size: 13px; margin: 0 0 6px; }
+  .mini ul { margin: 0; padding-left: 16px; color: var(--ink-2); }
+  .mini li { margin-bottom: 3px; }
+  .promise { font-size: 13px; color: var(--muted); margin-top: 12px; }
+  form { display: flex; gap: 8px; }
+  .step .error { color: var(--danger); font-size: 12.5px; margin: 6px 0 0; }
+  .error:empty { display: none; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 6px 0 12px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--bg); font-weight: 600; font-size: 13px; }
+  .chip button { width: 22px; height: 22px; border: 0; border-radius: 50%; background: none; color: var(--muted); font-size: 16px; line-height: 1; }
+  .chip button:hover { background: var(--danger-bg); color: var(--danger); }
+  .hint { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+  .pin { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--bg); font-size: 13.5px; }
+  .pin svg { width: 18px; height: 18px; flex: none; color: var(--ink-2); }
+  .finish { display: flex; align-items: center; gap: 12px; margin-left: 48px; }
+  .finish .muted { font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="head"><img class="logo" src="icons/icon-128.png" alt=""><h1>History scrubber</h1></div>
+  <p class="lede">Keep chosen sites out of your browser history, without logging out of them.</p>
+
+  <section class="step done">
+    <div class="num">1</div>
+    <div>
+      <h2>How it works</h2>
+      <p>Adding a site deletes the history it already has. After that, each visit is deleted the next time you close a tab. Anything missed, after a crash for example, goes at the next Chrome start.</p>
+      <div class="grid2">
+        <div class="card mini"><h3>Deleted</h3><ul>
+          <li>Pages on your sites, including redirect hops</li>
+          <li>Searches for the site's name</li>
+          <li>Download-list entries</li>
+          <li>Your Google account's copy, if history sync is on</li>
+        </ul></div>
+        <div class="card mini"><h3>Stays</h3><ul>
+          <li>Cookies, so you stay logged in</li>
+          <li>Downloaded files</li>
+          <li>Bookmarks and saved passwords</li>
+        </ul></div>
+      </div>
+      <p class="promise">To do this it reads your browsing history. Everything stays on this computer: no servers, no analytics, no network calls of its own.</p>
+    </div>
+  </section>
+
+  <section class="step" id="step-sites">
+    <div class="num">2</div>
+    <div>
+      <h2>Add your sites</h2>
+      <p>The list starts empty, and nothing is deleted until you add a site. Type a domain; subdomains are included.</p>
+      <form id="add">
+        <input class="input" id="domain" placeholder="e.g. example.com" autocomplete="off" spellcheck="false" aria-label="Site to add">
+        <button class="btn primary" type="submit">Add</button>
+      </form>
+      <p class="error" id="error" role="alert"></p>
+      <div class="chips" id="chips" aria-live="polite"></div>
+      <p class="hint">Later, add the site you're on straight from the toolbar button.</p>
+    </div>
+  </section>
+
+  <section class="step" id="step-pin">
+    <div class="num">3</div>
+    <div>
+      <h2>Pin it to your toolbar</h2>
+      <p>The button shows whether the site you're on is on your list, and adds or removes it in one click.</p>
+      <div class="card pin">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-2 .9-2 2v3.8h1.5a2.7 2.7 0 0 1 0 5.4H2V20c0 1.1.9 2 2 2h3.8v-1.5a2.7 2.7 0 0 1 5.4 0V22H17c1.1 0 2-.9 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z"/></svg>
+        <span>Click the puzzle-piece icon at the top right of Chrome, then the pin next to <strong>History scrubber</strong>.</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="finish">
+    <button class="btn primary" id="done">Done</button>
+    <span class="muted" id="finish-note"></span>
+  </div>
+</main>
+<script src="shared.js"></script>
+<script src="welcome.js"></script>
+</body>
+</html>

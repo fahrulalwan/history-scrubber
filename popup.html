@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>History scrubber</title>
+<link rel="preload" href="fonts/noto-sans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/newsreader.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="theme.css">
+<style>
+  body { width: 340px; }
+  /* Empty boxes filling in show as a flicker, so the content stays hidden until popup.js has
+     drawn it once (about 1 ms after load, before the first frame). */
+  body:not(.ready) main, body:not(.ready) footer span { visibility: hidden; }
+  #controls { display: grid; gap: 10px; }
+  #now-note { margin: 6px 0 0; }
+  #now-note:empty { display: none; }
+  header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  header .title { font-size: 16px; }
+  header .count { margin-left: auto; font-size: 12px; color: var(--muted); }
+  main { padding: 16px; display: grid; gap: 12px; }
+  .site { display: flex; align-items: center; gap: 10px; padding: 12px; }
+  .state { font-size: 12.5px; color: var(--muted); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .note { font-size: 12.5px; color: var(--muted); margin: -4px 0 0; }
+  footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+  #result { font-size: 12.5px; min-height: 0; }
+  #result:empty { display: none; }
+</style>
+</head>
+<body>
+  <header>
+    <img class="logo" src="icons/icon-48.png" alt="">
+    <div class="title">History scrubber</div>
+    <div class="count" id="count"></div>
+  </header>
+  <main>
+    <div class="site card" id="site"></div>
+    <div id="controls"></div>
+    <div>
+      <button class="btn ghost block" id="now">Delete history now</button>
+      <p class="note" id="now-note"></p>
+    </div>
+    <div id="result" class="signal" role="status"></div>
+  </main>
+  <footer>
+    <span id="sweep"></span>
+    <button class="link" id="settings">Settings</button>
+  </footer>
+  <script src="shared.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

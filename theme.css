@@ -1,0 +1,56 @@
+/* Quiet graphite: flat, teal only where it carries status. Fonts are bundled and subset to Latin
+   so opening the tool makes no network call; "block" because they load from disk in a few
+   milliseconds, and a swap from the fallback font shows as a flicker in the popup. */
+@font-face { font-family: "Newsreader"; src: url("fonts/newsreader.woff2") format("woff2"); font-weight: 500 700; font-display: block; }
+@font-face { font-family: "Noto Sans"; src: url("fonts/noto-sans.woff2") format("woff2"); font-weight: 400 700; font-display: block; }
+
+:root {
+  --font-head: "Newsreader", Georgia, serif;
+  --font-body: "Noto Sans", -apple-system, Arial, sans-serif;
+  --ink: #171d27; --ink-2: #28313e; --muted: #5b6471; --line: #d9dde3; --line-strong: #b6bec8;
+  --bg: #fcfcfd; --surface: #f7f9fa; --surface-2: #edf0f2;
+  --brand: #28313e; --on-brand: #f7f9fa; --accent: #096d86;
+  --danger: #c52020; --danger-bg: #fdecec;
+  --radius-sm: 6px; --radius: 8px; --radius-lg: 12px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #f0f2f4; --ink-2: #d2d7dd; --muted: #959da7; --line: #272b30; --line-strong: #3a4048;
+    --bg: #16191d; --surface: #0d0f12; --surface-2: #22262b;
+    --brand: #d2d7dd; --on-brand: #0d0f12; --accent: #35c8de;
+    --danger: #df4949; --danger-bg: #1f0d0f;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font-body); }
+h1, h2, .title { font-family: var(--font-head); color: var(--ink); letter-spacing: -0.01em; font-weight: 700; margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.logo { width: 28px; height: 28px; border-radius: 8px; flex: none; display: block; }
+.fav { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; background: var(--surface-2); color: var(--ink-2); flex: none; text-transform: uppercase; }
+.domain { font-weight: 600; word-break: break-all; }
+.muted { color: var(--muted); }
+.signal { color: var(--accent); font-weight: 600; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: var(--radius); font-weight: 600; border: 1px solid transparent; background: transparent; }
+.btn.primary { background: var(--brand); color: var(--on-brand); }
+.btn.ghost { border-color: var(--line-strong); }
+.btn:disabled { opacity: .5; cursor: default; }
+[hidden] { display: none !important; }
+.btn.block { width: 100%; height: 40px; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; }
+
+/* Switch: a real button with role="switch" so it works with keyboard and screen readers. */
+.switch { width: 36px; height: 20px; border-radius: 999px; border: 0; padding: 0; background: var(--line-strong); position: relative; flex: none; transition: background .15s; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: left .15s; }
+.switch[aria-checked="true"] { background: var(--brand); }
+.switch[aria-checked="true"]::after { left: 18px; }
+
+.card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.input { flex: 1; min-width: 0; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong); background: var(--bg); color: var(--ink); padding: 0 12px; font: inherit; }
+.input::placeholder { color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: inline-block; flex: none; }

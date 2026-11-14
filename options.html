@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>History scrubber settings</title>
+<link rel="stylesheet" href="theme.css">
+<style>
+  body { background: var(--surface); }
+  main { max-width: 680px; margin: 0 auto; padding: 40px 16px 64px; }
+  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .head .logo { width: 36px; height: 36px; border-radius: 10px; }
+  h1 { font-size: 30px; }
+  .sub { color: var(--muted); margin: 0 0 24px; max-width: 600px; }
+  .card { background: var(--bg); margin-bottom: 16px; }
+  .card-h { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 600; }
+  .card-h .muted { font-weight: 500; font-size: 12.5px; }
+  form { display: flex; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .error { color: var(--danger); font-size: 12.5px; padding: 0 16px 10px; margin: -4px 0 0; }
+  .error:empty { display: none; }
+  .srow { display: grid; grid-template-columns: 28px 1fr auto 32px; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  .srow:last-child { border-bottom: 0; }
+  .inc { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+  .remove { width: 32px; height: 32px; border: 0; background: none; color: var(--muted); font-size: 20px; border-radius: var(--radius-sm); }
+  .remove:hover { background: var(--danger-bg); color: var(--danger); }
+  .empty { padding: 16px; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+  .mini { padding: 12px 16px; font-size: 13px; }
+  .mini h2 { font-family: var(--font-body); font-size: 13px; margin: 0 0 6px; }
+  .mini ul { margin: 0; padding-left: 16px; color: var(--ink-2); }
+  .mini li { margin-bottom: 3px; }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; }
+  .foot .status { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .note { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <div class="head"><img class="logo" src="icons/icon-128.png" alt=""><h1>History scrubber</h1></div>
+  <p class="sub">Deletes history for these sites when you add one, when you close a tab, and again when Chrome starts. Cookies stay, so you stay logged in.</p>
+
+  <section class="card" aria-labelledby="sites-h">
+    <div class="card-h"><span id="sites-h">Sites</span><span class="muted" id="saved" role="status"></span></div>
+    <form id="add">
+      <input class="input" id="domain" placeholder="Add a site, e.g. example.com" autocomplete="off" spellcheck="false" aria-label="Site to add">
+      <button class="btn primary" type="submit">Add</button>
+    </form>
+    <p class="error" id="error" role="alert"></p>
+    <div id="list"></div>
+  </section>
+  <p class="note">Incognito: links to that site open in an incognito window, so no history is written at all. Incognito has its own cookies, so you'll be logged out there.</p>
+
+  <div class="grid2" style="margin-top:16px">
+    <section class="card mini"><h2>Deleted</h2><ul>
+      <li>Pages on these sites, including redirect hops</li>
+      <li>Searches for the site's name</li>
+      <li>Download-list entries</li>
+      <li>Your Google account's copy, through history sync</li>
+    </ul></section>
+    <section class="card mini"><h2>Stays</h2><ul>
+      <li>Cookies and logins</li>
+      <li>Downloaded files</li>
+      <li>Bookmarks and saved passwords</li>
+    </ul></section>
+  </div>
+
+  <div class="foot">
+    <span class="status"><span class="dot"></span><span id="sweep"></span></span>
+    <button class="btn ghost" id="now">Delete history now</button>
+  </div>
+</main>
+<script src="shared.js"></script>
+<script src="options.js"></script>
+</body>
+</html>
