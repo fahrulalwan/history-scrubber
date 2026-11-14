@@ -13,7 +13,7 @@ const SEARCH_HOSTS =/(^|\.)(google\.[a-z.]+|bing\.com|duckduckgo\.com|search\.ya
 let cached = null;
 async function getSettings() {
   if (!cached) {
-    const { sites, incognitoSites } = await chrome.storage.sync.get(['sites', 'incognitoSites']);
+    const { sites, incognitoSites } = await chrome.storage.local.get(['sites', 'incognitoSites']);
     cached = {
       sites: Array.isArray(sites) ? sites : [],
       incognitoSites: Array.isArray(incognitoSites) ? incognitoSites : [],
@@ -83,12 +83,18 @@ chrome.history.onVisited.addListener(async (item) => {
 
 // `scan` adds a pass over all history (about 0.6 s on 9,000 pages), needed for visits
 // made before a site was listed or synced from another device. A tab close skips it.
-function scrub(sites, scan) {
-  return serial(() => scrubNow(sites, scan));
+// Every run is logged (the last 10) so the user can see that deletion happened.
+function scrub(sites, scan, kind) {
+  return serial(async () => {
+    const result = await scrubNow(sites, scan);
+    const { sweeps = [] } = await chrome.storage.local.get('sweeps');
+    await chrome.storage.local.set({ sweeps: [{ at: new Date().toISOString(), kind, result }, ...sweeps].slice(0, 10) });
+    return result;
+  });
 }
 
 async function scrubNow(sites, scan) {
-  const result = Object.fromEntries(sites.map((s) => [s, { history: 0, downloads: 0 }]));
+  const result = Object.fromEntries(sites.map((s) => [s, { history: 0, downloads: 0, left: 0 }]));
   if (!sites.length) return result;
   const pending = await getPending();
   // Before the pages go, or Chrome's copy of the site's icon goes with them.
@@ -104,6 +110,10 @@ async function scrubNow(sites, scan) {
   for (const [url, [site, known]] of targets) {
     if (known || (await chrome.history.getVisits({ url })).length) result[site].history++;
     await chrome.history.deleteUrl({ url });
+  }
+  // The proof shown to the user: every page just deleted is looked up again.
+  for (const [url, [site]] of targets) {
+    if ((await chrome.history.getVisits({ url })).length) result[site].left++;
   }
   // Download-list entries only; the downloaded files stay on disk.
   const pattern = `^[a-z]+://([^/]*\\.)?(${sites.map(escapeRegex).join('|')})([:/?#]|$)`;
@@ -121,10 +131,8 @@ async function scrubNow(sites, scan) {
   return result;
 }
 
-async function scrubAll() {
-  const result = await scrub((await getSettings()).sites, true);
-  await chrome.storage.local.set({ lastSweep: { at: new Date().toISOString(), result } });
-  return result;
+async function scrubAll(kind) {
+  return scrub((await getSettings()).sites, true, kind);
 }
 
 // Any tab close deletes what was recorded so far, so no per-tab bookkeeping runs on
@@ -133,18 +141,30 @@ async function scrubAll() {
 chrome.tabs.onRemoved.addListener(async () => {
   const pending = await getPending();
   const sites = Object.keys(pending).filter((s) => pending[s].length);
-  if (sites.length) await scrub(sites, false);
+  if (sites.length) await scrub(sites, false, 'tab');
 });
 
+// The panic shortcut has no default key; the user picks one at chrome://extensions/shortcuts.
+chrome.commands.onCommand.addListener((command) => { if (command === 'panic') panic(); });
+
+async function panic() {
+  const { sites } = await getSettings();
+  if (!sites.length) return;
+  const tabs = await chrome.tabs.query({});
+  const listed = tabs.filter((t) => t.url && matchHost(hostOf(t.url), sites));
+  if (listed.length) await chrome.tabs.remove(listed.map((t) => t.id));
+  await scrubAll('panic');
+}
+
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area !== 'sync' || !(changes.sites || changes.incognitoSites)) return;
+  if (area !== 'local' || !(changes.sites || changes.incognitoSites)) return;
   cached = null;
   if (!changes.sites) return;
   const before = changes.sites.oldValue || [];
   const after = changes.sites.newValue || [];
   // A newly listed site loses the history it already has right away.
   const added = after.filter((s) => !before.includes(s));
-  if (added.length) scrub(added, true);
+  if (added.length) scrub(added, true, 'added');
   // A site taken off the list keeps its history, recorded visits included.
   const removed = before.filter((s) => !after.includes(s));
   if (removed.length) {
@@ -173,11 +193,19 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   else await chrome.tabs.update(tab.id, { url: committed }); // cancel the navigation, stay put
 }, { url: [{ schemes: ['http', 'https'] }] });
 
-chrome.runtime.onStartup.addListener(scrubAll);
-chrome.runtime.onInstalled.addListener(({ reason }) => {
+chrome.runtime.onStartup.addListener(() => scrubAll('start'));
+chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   if (reason === 'install') chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
+  // Before 1.7.0 the list lived in synced storage, which can reach the Google account.
+  const old = await chrome.storage.sync.get(['sites', 'incognitoSites']);
+  if (old.sites) {
+    const { sites } = await chrome.storage.local.get('sites');
+    if (!sites) await chrome.storage.local.set({ sites: old.sites, incognitoSites: old.incognitoSites || [] });
+    await chrome.storage.sync.clear();
+  }
+  await chrome.storage.local.remove('lastSweep'); // replaced by `sweeps`
 });
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
-  if (msg === 'scrubAll') { scrubAll().then(reply); return true; }
+  if (msg === 'scrubAll') { scrubAll('manual').then(reply); return true; }
 });

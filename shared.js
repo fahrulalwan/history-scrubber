@@ -9,8 +9,9 @@ function looksLikeDomain(domain) {
   return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(domain);
 }
 
+// The list stays on this computer: synced storage can reach the Google account.
 async function loadSettings() {
-  const { sites, incognitoSites } = await chrome.storage.sync.get(['sites', 'incognitoSites']);
+  const { sites, incognitoSites } = await chrome.storage.local.get(['sites', 'incognitoSites']);
   return {
     sites: Array.isArray(sites) ? sites : [],
     incognitoSites: Array.isArray(incognitoSites) ? incognitoSites : [],
@@ -21,7 +22,7 @@ async function saveSettings({ sites, incognitoSites }) {
   const unique = [...new Set(sites)];
   // Incognito is a per-site option, so it can't outlive the site.
   const incognito = [...new Set(incognitoSites)].filter((s) => unique.includes(s));
-  await chrome.storage.sync.set({ sites: unique, incognitoSites: incognito });
+  await chrome.storage.local.set({ sites: unique, incognitoSites: incognito });
 }
 
 function siteForHost(host, sites) {
@@ -40,6 +41,21 @@ function describeResult(result) {
   return parts.length ? `deleted ${parts.join(', ')}` : 'nothing left to delete';
 }
 
+// The check run right after deleting: how many of those pages are still in history.
+// Empty when the run deleted nothing, since "0 left" then adds nothing.
+function describeLeft(result) {
+  const rows = Object.values(result || {});
+  const left = rows.reduce((n, r) => n + (r.left || 0), 0);
+  if (left) return `${plural(left, 'page')} could not be deleted`;
+  return rows.some((r) => r.history) ? 'Checked again: 0 pages left' : '';
+}
+
+const SWEEP_KINDS = { start: 'Chrome start', tab: 'Tab closed', added: 'Site added', manual: 'Delete history now', panic: 'Panic shortcut' };
+
+async function loadSweeps() {
+  return (await chrome.storage.local.get('sweeps')).sweeps || [];
+}
+
 function describeWhen(iso) {
   const at = new Date(iso);
   const time = at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -48,9 +64,10 @@ function describeWhen(iso) {
 }
 
 async function lastSweepSentence() {
-  const { lastSweep } = await chrome.storage.local.get('lastSweep');
-  if (!lastSweep) return 'No sweep yet. One runs every time Chrome starts.';
-  return `Last sweep ${describeWhen(lastSweep.at)}: ${describeResult(lastSweep.result)}.`;
+  const [last] = await loadSweeps();
+  if (!last) return 'No sweep yet. One runs every time Chrome starts.';
+  const left = describeLeft(last.result);
+  return `Last sweep ${describeWhen(last.at)}: ${describeResult(last.result)}.${left ? ` ${left}.` : ''}`;
 }
 
 function el(tag, attrs = {}, ...children) {

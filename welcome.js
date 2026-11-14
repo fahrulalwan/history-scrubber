@@ -34,7 +34,7 @@ $('done').addEventListener('click', async () => {
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'sync' && changes.sites) render();
+  if (area === 'local' && changes.sites) render();
 });
 
 render();
