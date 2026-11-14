@@ -32,6 +32,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .logo { width: 28px; height: 28px; border-radius: 8px; flex: none; display: block; }
 .fav { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; background: var(--surface-2); color: var(--ink-2); flex: none; text-transform: uppercase; }
+.fav img { width: 18px; height: 18px; display: block; }
 .domain { font-weight: 600; word-break: break-all; }
 .muted { color: var(--muted); }
 .signal { color: var(--accent); font-weight: 600; }

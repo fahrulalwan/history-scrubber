@@ -4,7 +4,9 @@
 // Chrome itself drops the matching "Recently closed" entries and address-bar shortcuts
 // when a URL is deleted, and with history sync on, deleteUrl also deletes server-side.
 
-const SEARCH_HOSTS = /(^|\.)(google\.[a-z.]+|bing\.com|duckduckgo\.com|search\.yahoo\.com)$/;
+importScripts('favicon.js');
+
+const SEARCH_HOSTS =/(^|\.)(google\.[a-z.]+|bing\.com|duckduckgo\.com|search\.yahoo\.com)$/;
 
 // Every page load in every tab wakes this worker, so settings are read from storage
 // once per wake and an unrelated visit costs a string compare, not a storage read.
@@ -89,6 +91,8 @@ async function scrubNow(sites, scan) {
   const result = Object.fromEntries(sites.map((s) => [s, { history: 0, downloads: 0 }]));
   if (!sites.length) return result;
   const pending = await getPending();
+  // Before the pages go, or Chrome's copy of the site's icon goes with them.
+  await saveSiteIcons(sites, Object.fromEntries(sites.map((s) => [s, (pending[s] || []).slice(-3)])));
   const targets = new Map(); // url -> [site, known to be in history]
   for (const site of sites) for (const url of pending[site] || []) targets.set(url, [site, false]);
   if (scan) {
@@ -145,10 +149,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
   const removed = before.filter((s) => !after.includes(s));
   if (removed.length) {
     serial(async () => {
-      const pending = await getPending();
-      if (!removed.some((s) => s in pending)) return;
-      for (const s of removed) delete pending[s];
-      await chrome.storage.local.set({ pending });
+      const { pending = {}, icons = {} } = await chrome.storage.local.get(['pending', 'icons']);
+      if (!removed.some((s) => s in pending || s in icons)) return;
+      for (const s of removed) { delete pending[s]; delete icons[s]; }
+      await chrome.storage.local.set({ pending, icons });
     });
   }
 });

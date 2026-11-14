@@ -64,6 +64,15 @@ function el(tag, attrs = {}, ...children) {
   return node;
 }
 
+// The site's own icon when one was saved, else its first letter.
+function favEl(site, icon) {
+  return el('div', { class: 'fav' }, icon ? el('img', { src: icon, alt: '' }) : site[0]);
+}
+
+async function loadIcons() {
+  return (await chrome.storage.local.get('icons')).icons || {};
+}
+
 function plural(n, word) {
   return `${n} ${n === 1 ? word : word + 's'}`;
 }

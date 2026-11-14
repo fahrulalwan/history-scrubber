@@ -1,15 +1,16 @@
 const $ = (id) => document.getElementById(id);
 
-async function currentHost() {
+async function currentPage() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   try {
     const url = new URL(tab?.url || '');
-    return /^https?:$/.test(url.protocol) ? url.hostname.toLowerCase() : null;
+    return /^https?:$/.test(url.protocol) ? { url: url.href, host: url.hostname.toLowerCase() } : null;
   } catch { return null; }
 }
 
 async function render() {
-  const [settings, host, sweep] = await Promise.all([loadSettings(), currentHost(), lastSweepSentence()]);
+  const [settings, page, sweep, icons] = await Promise.all([loadSettings(), currentPage(), lastSweepSentence(), loadIcons()]);
+  const host = page?.host || null;
   const listed = host ? siteForHost(host, settings.sites) : null;
   const shown = listed || (host ? normalizeDomain(host) : null);
 
@@ -37,7 +38,9 @@ async function render() {
   const state = listed
     ? el('div', { class: 'state' }, el('span', { class: 'signal' }, 'On your list. '), 'History goes when this tab closes.')
     : el('div', { class: 'state' }, 'Not on your list. Its history is kept.');
-  site.append(el('div', { class: 'fav' }, shown[0]), el('div', {}, el('div', { class: 'domain' }, shown), state));
+  // The tab is open, so Chrome still has its icon even for a listed site.
+  const icon = icons[listed] || await realFavicon([page.url]);
+  site.append(favEl(shown, icon), el('div', {}, el('div', { class: 'domain' }, shown), state));
 
   controls.append(el('div', { class: 'row' }, el('span', {}, listed ? 'Keep on list' : 'Add to list'),
     makeSwitch('Keep this site on the list', !!listed, async (on) => {

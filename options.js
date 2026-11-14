@@ -14,7 +14,7 @@ async function update(change) {
 }
 
 async function render() {
-  const s = await loadSettings();
+  const [s, icons] = await Promise.all([loadSettings(), loadIcons()]);
   const list = $('list');
   list.replaceChildren();
   $('saved').textContent = plural(s.sites.length, 'site') + (savedAt ? ` · saved ${savedAt}` : '');
@@ -23,7 +23,7 @@ async function render() {
   }
   for (const site of s.sites) {
     list.append(el('div', { class: 'srow' },
-      el('div', { class: 'fav' }, site[0]),
+      favEl(site, icons[site]),
       el('div', { class: 'domain' }, site),
       el('div', { class: 'inc' }, 'Incognito',
         makeSwitch(`Always open ${site} in incognito`, s.incognitoSites.includes(site), (on) =>
@@ -56,7 +56,7 @@ $('now').addEventListener('click', async () => {
 
 // Another window (the popup) can change the list; keep this page in step.
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'sync' && (changes.sites || changes.incognitoSites)) render();
+  if ((area === 'sync' && (changes.sites || changes.incognitoSites)) || (area === 'local' && changes.icons)) render();
 });
 
 render();

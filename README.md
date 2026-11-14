@@ -36,6 +36,7 @@ History scrubber records every visit to a listed site as it happens, through `ch
 
 - It reads your browsing history, because that is how it finds what to delete. Nothing leaves your computer: no server, no analytics, no network requests. The fonts are bundled.
 - Your site list is saved with `chrome.storage.sync`. If Chrome sync is on, the list syncs to your Google account like any other extension setting.
+- Site icons come from Chrome's local icon store, not the network. Chrome deletes a site's icon along with its history, so the extension keeps a copy of each listed site's icon in its local storage, and drops it when you take the site off the list.
 - There is no build step and no dependency. What you read in this repo is what runs.
 
 ## Install
@@ -58,6 +59,7 @@ Tested in Chrome 157 on macOS.
 | `storage` | Your site list and the visits waiting to be deleted |
 | `downloads` | Erasing download-list entries |
 | `webNavigation` | The per-site incognito option |
+| `favicon` | Showing each site's icon, read from Chrome's own icon store |
 
 ## Cost to your machine
 
